@@ -1,8 +1,10 @@
 require("dotenv").config();
 const authRoutes = require("./routes/AuthRoutes");
+const routes = require("./routes");
 const mongoose = require("mongoose");
 const express = require("express");
 const errorHandler = require("./middleware/errorHandle");
+const { uploadDefaultAvatar } = require("./services/minioService");
 
 
 const app = express();
@@ -19,7 +21,8 @@ const connectDB = async () => {
 
 connectDB()
 
-app.use("/api/auth", authRoutes);
+app.use("/api", routes);
+uploadDefaultAvatar();
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

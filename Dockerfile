@@ -1,6 +1,6 @@
 FROM node:latest
 
-WORKDIR /app
+WORKDIR /toeic
 
 COPY package*.json ./
 
@@ -12,6 +12,8 @@ RUN npm install multer
 RUN npm install nodemailer
 RUN npm install firebase-admin
 RUN npm install express ws cors
+RUN npm install express-async-handler
+RUN npm install minio
 
 COPY . .
 

@@ -1,23 +1,58 @@
-version: "3.8"
+version: '3.8'
 
 services:
+
+  minio:
+    image: quay.io/minio/minio
+    container_name: minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    command: server /data --console-address ":9090"
+    volumes:
+      - minio_data:/data
+
   backend:
     build: .
+    container_name: toeic-backend
     ports:
       - "5000:5000"
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy 
+      minio:
+        condition: service_started
+    volumes:
+      - .:/toeic
+      - /toeic/node_modules
     environment:
       MONGO_URI: "mongodb://mongodb:27017/toeic"
-      JWT_SECRET: "supersecret"
-    restart: always
+      JWT_SECRET: ${JWT_SECRET}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: "toeic-assets"
+    env_file:
+      - .env
 
   mongodb:
     image: mongo:latest
+    container_name: mongodb
+    restart: always
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   mongo_data:
+  minio_data:
